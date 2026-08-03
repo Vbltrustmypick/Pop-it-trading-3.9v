@@ -1,0 +1,588 @@
+-- Load WindUI Library
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+local TextChatService = game:GetService("TextChatService")
+local Stats = game:GetService("Stats")
+
+local LocalPlayer = Players.LocalPlayer
+local buyRemote = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("BuyItemCash")
+
+-- Toggle States (Auto Buy)
+local autoLenay = false
+local autoXOX = false
+local autoCake = false
+local autoRainbowDragon = false
+local autoShadowDragon = false
+local autoPepper = false
+local autoBrain = false
+local autoWalkyTalky = false
+local autoRetroBike = false
+local autoCapuchino = false
+local autoRainbowTralalelo = false
+local autoUdin = false
+local autoGaram = false
+local autoHydrant = false
+local autoBlackSparklyDumpling = false
+
+-- New Items States
+local autoDemogorgan = false
+local autoLilDudeReal = false
+local autoGoldFoldingChair = false
+
+-- Troll & Chat States
+local spinBotEnabled = false
+local noclipEnabled = false
+local selectedPlayerName = ""
+local customChatMessage = "Hello from Pop It Trading Hub!"
+local autoChatEnabled = false
+local targetJobId = ""
+
+-- Session Time Tracker
+local startTime = os.time()
+
+-- Helper Function for Purchasing
+local function buyItem(itemName)
+    pcall(function()
+        buyRemote:FireServer(itemName, 0, 1)
+    end)
+end
+
+-- Helper Function for Chatting
+local function sendChatMessage(msg)
+    pcall(function()
+        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+            local textChannel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+            if textChannel then
+                textChannel:SendAsync(msg)
+            end
+        else
+            local sayRemote = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") and ReplicatedStorage.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
+            if sayRemote then
+                sayRemote:FireServer(msg, "All")
+            end
+        end
+    end)
+end
+
+-- Helper Function to get Player Names List
+local function getOtherPlayers()
+    local list = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            table.insert(list, p.Name)
+        end
+    end
+    if #list == 0 then
+        table.insert(list, "No other players")
+    end
+    return list
+end
+
+-- Create Window (Title 3.9v OP Red)
+local Window = WindUI:CreateWindow({
+    Title = 'Pop It Trading Hub <font color="#FF0000">3.9v OP</font>',
+    Author = "by trustmypick :3",
+    Icon = "zap",
+    Folder = "PopItTradingConfig",
+    Size = UDim2.fromOffset(600, 550)
+})
+
+-- Big Discord Popup Dialog
+Window:Dialog({
+    Title = '<font size="22"><b>DISCORD SERVER</b></font>',
+    Content = '<font size="16">Join our official server for more updates and exclusive scripts!<br/><br/><b>https://discord.gg/T7CnCSAE7</b></font>',
+    Buttons = {
+        {
+            Title = "Yeah",
+            Callback = function()
+                if setclipboard then
+                    setclipboard("https://discord.gg/T7CnCSAE7")
+                end
+            end
+        },
+        {
+            Title = "Fuck off",
+            Callback = function()
+                -- Do nothing
+            end
+        }
+    }
+})
+
+-- Create Tabs
+local MainTab = Window:Tab({ Title = "Auto Buy", Icon = "shopping-cart" })
+local InstantTab = Window:Tab({ Title = "Instant Buy", Icon = "zap" })
+local PlayerToolsTab = Window:Tab({ Title = "Player Tools", Icon = "users" })
+local OtherHubTab = Window:Tab({ Title = "Other Hub", Icon = "globe" })
+local SettingsTab = Window:Tab({ Title = "Settings", Icon = "settings" })
+local StatsTab = Window:Tab({ Title = "Game Stats", Icon = "bar-chart-2" })
+local ServerTab = Window:Tab({ Title = "Server Utils", Icon = "server" })
+local TrollTab = Window:Tab({ Title = "Troll & Fun", Icon = "ghost" })
+local PlayerTab = Window:Tab({ Title = "Utilities", Icon = "user" })
+local UpdateTab = Window:Tab({ Title = "Update Log", Icon = "clipboard-list" })
+local AboutTab = Window:Tab({ Title = "About Us", Icon = "info" })
+
+--------------------------------------------------------------------------------
+-- AUTO BUY TOGGLES
+--------------------------------------------------------------------------------
+
+local mainNewItemsSec = MainTab:Section({ Title = 'New Released Items <font color="#FF0000">[NEW]</font>', Opened = true })
+mainNewItemsSec:Toggle({ Title = 'Auto Buy Demogorgan <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoDemogorgan = s end })
+mainNewItemsSec:Toggle({ Title = 'Auto Buy Lil Dude Real <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoLilDudeReal = s end })
+mainNewItemsSec:Toggle({ Title = 'Auto Buy Gold Folding Chair <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoGoldFoldingChair = s end })
+
+local mainDumplingSec = MainTab:Section({ Title = 'Dumpling Items <font color="#FF0000">[NEW]</font>', Opened = true })
+mainDumplingSec:Toggle({ Title = 'Auto Buy Black Sparkly Dumpling <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoBlackSparklyDumpling = s end })
+
+local mainNftSec = MainTab:Section({ Title = 'NFT Items <font color="#FFD700">[BEST]</font>', Opened = true })
+mainNftSec:Toggle({ Title = "Auto Buy Lenay (NFT)", Value = false, Callback = function(s) autoLenay = s end })
+mainNftSec:Toggle({ Title = "Auto Buy XOX (NFT)", Value = false, Callback = function(s) autoXOX = s end })
+
+local mainQuestSec = MainTab:Section({ Title = "Quest & Cash Items", Opened = true })
+mainQuestSec:Toggle({ Title = 'Auto Buy Hydrant <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoHydrant = s end })
+mainQuestSec:Toggle({ Title = "Auto Buy Brain", Value = false, Callback = function(s) autoBrain = s end })
+mainQuestSec:Toggle({ Title = "Auto Buy Rainbow Pepper 8Bit", Value = false, Callback = function(s) autoPepper = s end })
+
+local mainBrainrotSec = MainTab:Section({ Title = 'Brainrot Items <font color="#FF0000">[HOT]</font>', Opened = true })
+mainBrainrotSec:Toggle({ Title = "Auto Buy Rainbow Tralalelo Tralala", Value = false, Callback = function(s) autoRainbowTralalelo = s end })
+mainBrainrotSec:Toggle({ Title = "Auto Buy Udin din din", Value = false, Callback = function(s) autoUdin = s end })
+mainBrainrotSec:Toggle({ Title = "Auto Buy Garam", Value = false, Callback = function(s) autoGaram = s end })
+mainBrainrotSec:Toggle({ Title = "Auto Buy Capuchino", Value = false, Callback = function(s) autoCapuchino = s end })
+
+local mainRobuxSec = MainTab:Section({ Title = "Robux Items", Opened = true })
+mainRobuxSec:Toggle({ Title = "Auto Buy Rainbow Strawberry Cake", Value = false, Callback = function(s) autoCake = s end })
+mainRobuxSec:Toggle({ Title = "Auto Buy Rainbow Dragon", Value = false, Callback = function(s) autoRainbowDragon = s end })
+mainRobuxSec:Toggle({ Title = "Auto Buy Shadow Dragon", Value = false, Callback = function(s) autoShadowDragon = s end })
+
+local mainNfsSec = MainTab:Section({ Title = "Not For Sale", Opened = true })
+mainNfsSec:Toggle({ Title = "Auto Buy Walky Talky", Value = false, Callback = function(s) autoWalkyTalky = s end })
+mainNfsSec:Toggle({ Title = "Auto Buy Retro Bike", Value = false, Callback = function(s) autoRetroBike = s end })
+
+--------------------------------------------------------------------------------
+-- INSTANT BUY BUTTONS
+--------------------------------------------------------------------------------
+
+local instNewItemsSec = InstantTab:Section({ Title = 'New Released Items <font color="#FF0000">[NEW]</font>', Opened = true })
+instNewItemsSec:Button({ Title = 'Buy Demogorgan <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Demogorgan") end })
+instNewItemsSec:Button({ Title = 'Buy Lil Dude Real <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Lil Dude Real") end })
+instNewItemsSec:Button({ Title = 'Buy Gold Folding Chair <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Gold Folding Chair") end })
+
+local instDumplingSec = InstantTab:Section({ Title = 'Dumpling Items <font color="#FF0000">[NEW]</font>', Opened = true })
+instDumplingSec:Button({ Title = 'Buy Black Sparkly Dumpling <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Black Sparkly Dumpling") end })
+
+local instNftSec = InstantTab:Section({ Title = 'NFT Items <font color="#FFD700">[BEST]</font>', Opened = true })
+instNftSec:Button({ Title = "Buy Lenay (NFT)", Callback = function() buyItem("Lenay") end })
+instNftSec:Button({ Title = "Buy XOX (NFT)", Callback = function() buyItem("XOX") end })
+
+local instQuestSec = InstantTab:Section({ Title = "Quest & Cash Items", Opened = true })
+instQuestSec:Button({ Title = 'Buy Hydrant <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Hydrant") end })
+instQuestSec:Button({ Title = "Buy Brain", Callback = function() buyItem("Brain") end })
+instQuestSec:Button({ Title = "Buy Rainbow Pepper 8Bit", Callback = function() buyItem("Rainbow Pepper 8Bit") end })
+
+local instBrainrotSec = InstantTab:Section({ Title = 'Brainrot Items <font color="#FF0000">[HOT]</font>', Opened = true })
+instBrainrotSec:Button({ Title = "Buy Rainbow Tralalelo Tralala", Callback = function() buyItem("Rainbow Tralalelo Tralala") end })
+instBrainrotSec:Button({ Title = "Buy Udin din din", Callback = function() buyItem("Udin din din") end })
+instBrainrotSec:Button({ Title = "Buy Garam", Callback = function() buyItem("Garam") end })
+instBrainrotSec:Button({ Title = "Buy Capuchino", Callback = function() buyItem("Capuchino") end })
+
+local instRobuxSec = InstantTab:Section({ Title = "Robux Items", Opened = true })
+instRobuxSec:Button({ Title = "Buy Rainbow Strawberry Cake", Callback = function() buyItem("Rainbow Strawberry Cake") end })
+instRobuxSec:Button({ Title = "Buy Rainbow Dragon", Callback = function() buyItem("Rainbow Dragon") end })
+instRobuxSec:Button({ Title = "Buy Shadow Dragon", Callback = function() buyItem("Shadow Dragon") end })
+
+local instNfsSec = InstantTab:Section({ Title = "Not For Sale", Opened = true })
+instNfsSec:Button({ Title = "Buy Walky Talky", Callback = function() buyItem("Walky Talky") end })
+instNfsSec:Button({ Title = "Buy Retro Bike", Callback = function() buyItem("Retro Bike") end })
+
+--------------------------------------------------------------------------------
+-- PLAYER TOOLS & CHAT
+--------------------------------------------------------------------------------
+
+local tpSec = PlayerToolsTab:Section({ Title = "Player Teleport", Opened = true })
+
+local playerDropdown = tpSec:Dropdown({
+    Title = "Select Player",
+    Values = getOtherPlayers(),
+    Callback = function(val)
+        selectedPlayerName = val
+    end
+})
+
+tpSec:Button({
+    Title = "Refresh Players List",
+    Callback = function()
+        playerDropdown:SetValues(getOtherPlayers())
+    end
+})
+
+tpSec:Button({
+    Title = "Teleport to Player",
+    Callback = function()
+        if selectedPlayerName ~= "" and selectedPlayerName ~= "No other players" then
+            local targetPlayer = Players:FindFirstChild(selectedPlayerName)
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                end
+            end
+        end
+    end
+})
+
+local chatSec = PlayerToolsTab:Section({ Title = "Chat Utilities", Opened = true })
+
+chatSec:Input({
+    Title = "Custom Chat Message",
+    Value = customChatMessage,
+    Callback = function(text)
+        customChatMessage = text
+    end
+})
+
+chatSec:Button({
+    Title = "Send Message Now",
+    Callback = function()
+        if customChatMessage ~= "" then
+            sendChatMessage(customChatMessage)
+        end
+    end
+})
+
+chatSec:Toggle({
+    Title = "Auto Send Chat Message (10s)",
+    Value = false,
+    Callback = function(state)
+        autoChatEnabled = state
+        task.spawn(function()
+            while autoChatEnabled do
+                if customChatMessage ~= "" then
+                    sendChatMessage(customChatMessage)
+                end
+                task.wait(10)
+            end
+        end)
+    end
+})
+
+--------------------------------------------------------------------------------
+-- OTHER HUB TAB
+--------------------------------------------------------------------------------
+
+local otherHubSec = OtherHubTab:Section({ Title = 'External Scripts <font color="#FF0000">[NEW]</font>', Opened = true })
+
+otherHubSec:Button({
+    Title = 'Pop It Trading Script (Spawner) [PATCHED] <font color="#FF0000">[NEW]</font>',
+    Desc = "Executes external spawner script",
+    Callback = function()
+        pcall(function()
+            loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=Spawner"))("Spawner")
+        end)
+    end
+})
+
+--------------------------------------------------------------------------------
+-- UI & SCRIPT SETTINGS
+--------------------------------------------------------------------------------
+
+local settingsCtrlSec = SettingsTab:Section({ Title = "Menu Controls", Opened = true })
+settingsCtrlSec:Keybind({
+    Title = "Toggle UI Keybind",
+    Desc = "Press to open/close menu",
+    Value = "RightControl",
+    Callback = function()
+        Window:Toggle()
+    end
+})
+
+local settingsActSec = SettingsTab:Section({ Title = "Script Actions", Opened = true })
+settingsActSec:Button({
+    Title = "Destroy UI",
+    Desc = "Closes and unloads the script menu",
+    Callback = function()
+        Window:Destroy()
+    end
+})
+
+--------------------------------------------------------------------------------
+-- PLAYER & GAME STATS
+--------------------------------------------------------------------------------
+
+local statsLiveSec = StatsTab:Section({ Title = "Live Statistics", Opened = true })
+local fpsParagraph = statsLiveSec:Paragraph({ Title = "FPS", Desc = "Calculating..." })
+local pingParagraph = statsLiveSec:Paragraph({ Title = "Ping", Desc = "Calculating..." })
+
+local statsAccSec = StatsTab:Section({ Title = "Account & Session", Opened = true })
+statsAccSec:Paragraph({ 
+    Title = "Account Info", 
+    Desc = "User: " .. LocalPlayer.Name .. "\nUserId: " .. LocalPlayer.UserId .. "\nAccount Age: " .. LocalPlayer.AccountAge .. " days"
+})
+local sessionParagraph = statsAccSec:Paragraph({ Title = "Session Time", Desc = "0s" })
+
+-- Live Stats Loop
+task.spawn(function()
+    while true do
+        local fps = math.floor(1 / RunService.RenderStepped:Wait())
+        fpsParagraph:SetDesc(tostring(fps) .. " FPS")
+        
+        local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+        pingParagraph:SetDesc(tostring(ping) .. " ms")
+        
+        local elapsed = os.time() - startTime
+        local hours = math.floor(elapsed / 3600)
+        local minutes = math.floor((elapsed % 3600) / 60)
+        local seconds = elapsed % 60
+        sessionParagraph:SetDesc(string.format("%02dh %02dm %02ds", hours, minutes, seconds))
+        
+        task.wait(1)
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- SERVER UTILITIES
+--------------------------------------------------------------------------------
+
+local serverMgmtSec = ServerTab:Section({ Title = "Server Management", Opened = true })
+
+serverMgmtSec:Input({
+    Title = 'Target JobId <font color="#FF0000">[NEW]</font>',
+    Desc = "Paste the server JobId here",
+    Value = "",
+    Callback = function(text)
+        targetJobId = text
+    end
+})
+
+serverMgmtSec:Button({
+    Title = 'Join Server via JobId <font color="#FF0000">[NEW]</font>',
+    Desc = "Teleport to the server specified in the box above",
+    Callback = function()
+        if targetJobId ~= "" then
+            pcall(function()
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, targetJobId, LocalPlayer)
+            end)
+        end
+    end
+})
+
+serverMgmtSec:Button({
+    Title = "Find Old Server",
+    Desc = "Search and join an older running server",
+    Callback = function()
+        pcall(function()
+            local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+            local rawData = game:HttpGet(url)
+            local servers = HttpService:JSONDecode(rawData)
+            
+            if servers and servers.data then
+                for _, s in ipairs(servers.data) do
+                    if s.id ~= game.JobId and s.playing > 0 and s.playing < s.maxPlayers then
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, LocalPlayer)
+                        break
+                    end
+                end
+            end
+        end)
+    end
+})
+
+serverMgmtSec:Button({
+    Title = "Join Small Server",
+    Callback = function()
+        pcall(function()
+            local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+            local servers = HttpService:JSONDecode(game:HttpGet(url))
+            
+            local validServers = {}
+            for _, s in ipairs(servers.data) do
+                if s.id ~= game.JobId and s.playing > 0 and s.playing < s.maxPlayers then
+                    table.insert(validServers, s)
+                end
+            end
+            
+            table.sort(validServers, function(a, b)
+                return a.playing < b.playing
+            end)
+            
+            if #validServers > 0 then
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, validServers[1].id, LocalPlayer)
+            end
+        end)
+    end
+})
+
+serverMgmtSec:Button({
+    Title = "Rejoin Server",
+    Callback = function()
+        pcall(function()
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+        end)
+    end
+})
+
+serverMgmtSec:Button({
+    Title = "Server Hop",
+    Callback = function()
+        pcall(function()
+            local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
+            for _, s in ipairs(servers.data) do
+                if s.id ~= game.JobId and s.playing < s.maxPlayers then
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, LocalPlayer)
+                    break
+                end
+            end
+        end)
+    end
+})
+
+serverMgmtSec:Button({
+    Title = "Copy JobId",
+    Callback = function()
+        if setclipboard then
+            setclipboard(tostring(game.JobId))
+        end
+    end
+})
+
+local serverExtraSec = ServerTab:Section({ Title = "Extra Utilities", Opened = true })
+serverExtraSec:Paragraph({
+    Title = "Server Info",
+    Desc = "JobId: " .. tostring(game.JobId) .. "\nPlaceId: " .. tostring(game.PlaceId)
+})
+
+--------------------------------------------------------------------------------
+-- TROLL & FUN
+--------------------------------------------------------------------------------
+
+local trollFeatSec = TrollTab:Section({ Title = 'Troll Features <font color="#FF0000">[FOR FUN]</font>', Opened = true })
+
+trollFeatSec:Toggle({
+    Title = "Spin Bot (Fun)",
+    Value = false,
+    Callback = function(state)
+        spinBotEnabled = state
+        task.spawn(function()
+            while spinBotEnabled do
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(50), 0)
+                end
+                task.wait()
+            end
+        end)
+    end
+})
+
+trollFeatSec:Toggle({
+    Title = "NoClip (Walk through walls)",
+    Value = false,
+    Callback = function(state)
+        noclipEnabled = state
+    end
+})
+
+local trollPhysSec = TrollTab:Section({ Title = "Physics Troll", Opened = true })
+trollPhysSec:Button({ Title = "Low Gravity (Moon)", Callback = function() workspace.Gravity = 50 end })
+trollPhysSec:Button({ Title = "Normal Gravity", Callback = function() workspace.Gravity = 196.2 end })
+
+local trollVisSec = TrollTab:Section({ Title = "Visual Effects", Opened = true })
+trollVisSec:Button({ Title = "Night Mode (Full Pink/Purple Sky)", Callback = function() Lighting.ClockTime = 0 Lighting.FogColor = Color3.fromRGB(128, 0, 128) end })
+trollVisSec:Button({ Title = "Day Mode (Reset Sky)", Callback = function() Lighting.ClockTime = 14 Lighting.FogColor = Color3.fromRGB(192, 192, 192) end })
+trollVisSec:Button({ Title = "Max FOV Zoom (120)", Callback = function() workspace.CurrentCamera.FieldOfView = 120 end })
+trollVisSec:Button({ Title = "Reset FOV (70)", Callback = function() workspace.CurrentCamera.FieldOfView = 70 end })
+
+-- NoClip Loop
+RunService.Stepped:Connect(function()
+    if noclipEnabled and LocalPlayer.Character then
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- UPDATE LOG TAB
+--------------------------------------------------------------------------------
+
+local updateNewSec = UpdateTab:Section({ Title = 'What\'s New in 3.9v OP <font color="#FF0000">[NEW]</font>', Opened = true })
+updateNewSec:Paragraph({
+    Title = "v3.9v OP Release",
+    Desc = "- Ingrandito il Dialog di benvenuto Discord\n- Corretti i nomi dei pulsanti 'Yeah' e 'Fuck off' (usando 'Title' al posto di 'Name')\n- Aggiornato alla versione 3.9v OP"
+})
+
+local updateOldSec = UpdateTab:Section({ Title = "Previous Updates", Opened = true })
+updateOldSec:Paragraph({ Title = "v3.8 Release", Desc = "- Added Discord Server prompt dialog" })
+updateOldSec:Paragraph({ Title = "v3.7 Release", Desc = "- Added Demogorgan, Lil Dude Real, and Gold Folding Chair" })
+updateOldSec:Paragraph({ Title = "v3.6 Release", Desc = "- Added 'Other Hub' tab with Spawner script" })
+updateOldSec:Paragraph({ Title = "v3.51 Release", Desc = "- Updated interface to English" })
+updateOldSec:Paragraph({ Title = "v3.4 Release", Desc = "- Added JobId Join feature" })
+updateOldSec:Paragraph({ Title = "v3.3 Release", Desc = "- Redesigned all [NEW] tags with red color highlight" })
+updateOldSec:Paragraph({ Title = "v3.2 Release", Desc = "- Added Find Old Server button" })
+updateOldSec:Paragraph({ Title = "v3.1 Release", Desc = "- Added Black Sparkly Dumpling item & Dumpling section" })
+updateOldSec:Paragraph({ Title = "v3.0 Release", Desc = "- Added Hydrant item & Extra Utilities" })
+updateOldSec:Paragraph({ Title = "v2.9 Release", Desc = "- Added Player Tools Tab & Chat Utils" })
+updateOldSec:Paragraph({ Title = "v2.8 Release", Desc = "- Updated Settings Tab controls" })
+updateOldSec:Paragraph({ Title = "v2.7 Release", Desc = "- Added Settings Tab" })
+updateOldSec:Paragraph({ Title = "v2.6 Release", Desc = "- Added Game Stats Tab (FPS, Ping, Session Time)" })
+updateOldSec:Paragraph({ Title = "v2.5 Release", Desc = "- Removed Inventory Utils section" })
+updateOldSec:Paragraph({ Title = "v2.1 Release", Desc = "- Fixed Join Small Server logic to target lowest populated server" })
+updateOldSec:Paragraph({ Title = "v2.0 Release", Desc = "- Added Server Utilities section (Rejoin, Server Hop, Copy JobId)" })
+updateOldSec:Paragraph({ Title = "v1.9 Release", Desc = "- Added Visual Effects section (Night Mode & Max FOV Zoom)" })
+updateOldSec:Paragraph({ Title = "v1.8 Release", Desc = "- Added TROLL & FUN Tab (SpinBot, NoClip, Gravity)" })
+updateOldSec:Paragraph({ Title = "v1.7 Release", Desc = "- Fixed Brain purchase method via BuyItemCash RemoteEvent" })
+updateOldSec:Paragraph({ Title = "v1.6 Release", Desc = "- Added Brain Quest Item and NFT [BEST]" })
+updateOldSec:Paragraph({ Title = "v1.5 Release", Desc = "- Added Rainbow Tralalelo, Udin din din, Garam" })
+updateOldSec:Paragraph({ Title = "v1.4 Release", Desc = "- Added Utilities Tab with Speed & Jump modifiers" })
+updateOldSec:Paragraph({ Title = "v1.3 Release", Desc = "- Added Brainrot Items section and Update Log tab" })
+updateOldSec:Paragraph({ Title = "v1.2 Release", Desc = "- Optimized Auto Buy loop speed" })
+updateOldSec:Paragraph({ Title = "v1.1 Release", Desc = "- Added Quest Items and Not For Sale items" })
+updateOldSec:Paragraph({ Title = "v1.0 Release", Desc = "- Initial Script Launch" })
+
+--------------------------------------------------------------------------------
+-- UTILITIES & ABOUT
+--------------------------------------------------------------------------------
+
+local playerModSec = PlayerTab:Section({ Title = "Player Modifiers", Opened = true })
+playerModSec:Button({ Title = "Speed Boost (32)", Callback = function() if LocalPlayer.Character then LocalPlayer.Character.Humanoid.WalkSpeed = 32 end end })
+playerModSec:Button({ Title = "Reset Speed (16)", Callback = function() if LocalPlayer.Character then LocalPlayer.Character.Humanoid.WalkSpeed = 16 end end })
+playerModSec:Button({ Title = "High Jump (100)", Callback = function() if LocalPlayer.Character then LocalPlayer.Character.Humanoid.UseJumpPower = true LocalPlayer.Character.Humanoid.JumpPower = 100 end end })
+playerModSec:Button({ Title = "Reset Jump (50)", Callback = function() if LocalPlayer.Character then LocalPlayer.Character.Humanoid.JumpPower = 50 end end })
+
+local aboutSec = AboutTab:Section({ Title = "Credits & Info", Opened = true })
+aboutSec:Paragraph({ Title = "Script Credits", Desc = "This script was made ONLY by trustmypick :3" })
+aboutSec:Paragraph({ Title = "Status", Desc = "Script is currently ACTIVE and FUNCTIONAL." })
+
+--------------------------------------------------------------------------------
+-- AUTO BUY LOOP
+--------------------------------------------------------------------------------
+task.spawn(function()
+    while true do
+        if autoDemogorgan then buyItem("Demogorgan") end
+        if autoLilDudeReal then buyItem("Lil Dude Real") end
+        if autoGoldFoldingChair then buyItem("Gold Folding Chair") end
+        if autoBlackSparklyDumpling then buyItem("Black Sparkly Dumpling") end
+        if autoHydrant then buyItem("Hydrant") end
+        if autoBrain then buyItem("Brain") end
+        if autoRainbowTralalelo then buyItem("Rainbow Tralalelo Tralala") end
+        if autoUdin then buyItem("Udin din din") end
+        if autoGaram then buyItem("Garam") end
+        if autoCapuchino then buyItem("Capuchino") end
+        if autoLenay then buyItem("Lenay") end
+        if autoXOX then buyItem("XOX") end
+        if autoCake then buyItem("Rainbow Strawberry Cake") end
+        if autoRainbowDragon then buyItem("Rainbow Dragon") end
+        if autoShadowDragon then buyItem("Shadow Dragon") end
+        if autoPepper then buyItem("Rainbow Pepper 8Bit") end
+        if autoWalkyTalky then buyItem("Walky Talky") end
+        if autoRetroBike then buyItem("Retro Bike") end
+        task.wait(0.5)
+    end
+end)
