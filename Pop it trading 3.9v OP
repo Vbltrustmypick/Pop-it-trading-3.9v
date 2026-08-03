@@ -27,7 +27,7 @@ local autoWalkyTalky = false
 local autoRetroBike = false
 local autoCapuchino = false
 local autoRainbowTralalelo = false
-local autoUdin = false
+autoUdin = false
 local autoGaram = false
 local autoHydrant = false
 local autoBlackSparklyDumpling = false
@@ -515,7 +515,7 @@ end)
 local updateNewSec = UpdateTab:Section({ Title = 'What\'s New in 3.9v OP <font color="#FF0000">[NEW]</font>', Opened = true })
 updateNewSec:Paragraph({
     Title = "v3.9v OP Release",
-    Desc = "- Ingrandito il Dialog di benvenuto Discord\n- Corretti i nomi dei pulsanti 'Yeah' e 'Fuck off' (usando 'Title' al posto di 'Name')\n- Aggiornato alla versione 3.9v OP"
+    Desc = "- Added new features\n- Added Discord Server popup dialog\n- Configured buttons: 'Yeah' and 'Fuck off'"
 })
 
 local updateOldSec = UpdateTab:Section({ Title = "Previous Updates", Opened = true })
