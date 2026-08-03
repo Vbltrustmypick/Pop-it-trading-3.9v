@@ -15,6 +15,18 @@ local Stats = game:GetService("Stats")
 local LocalPlayer = Players.LocalPlayer
 local buyRemote = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("BuyItemCash")
 
+--------------------------------------------------------------------------------
+-- WHITELIST SYSTEM
+--------------------------------------------------------------------------------
+local whitelist = {
+    ["trustmypick"] = true,
+    ["nanahaheu374747"] = true,
+    ["YourUsernameHere"] = true
+}
+
+-- Controllo case-insensitive
+local isWhitelisted = whitelist[string.lower(LocalPlayer.Name)] or whitelist[LocalPlayer.Name] or false
+
 -- Toggle States (Auto Buy)
 local autoLenay = false
 local autoXOX = false
@@ -27,7 +39,7 @@ local autoWalkyTalky = false
 local autoRetroBike = false
 local autoCapuchino = false
 local autoRainbowTralalelo = false
-autoUdin = false
+local autoUdin = false
 local autoGaram = false
 local autoHydrant = false
 local autoBlackSparklyDumpling = false
@@ -36,6 +48,12 @@ local autoBlackSparklyDumpling = false
 local autoDemogorgan = false
 local autoLilDudeReal = false
 local autoGoldFoldingChair = false
+
+-- Premium States
+local ultraAutoBuy = false
+local flyEnabled = false
+local flySpeed = 50
+local flyConnection = nil
 
 -- Troll & Chat States
 local spinBotEnabled = false
@@ -109,10 +127,8 @@ Window:Dialog({
             end
         },
         {
-            Title = "Fuck off",
-            Callback = function()
-                -- Do nothing
-            end
+            Title = "Close",
+            Callback = function() end
         }
     }
 })
@@ -120,6 +136,7 @@ Window:Dialog({
 -- Create Tabs
 local MainTab = Window:Tab({ Title = "Auto Buy", Icon = "shopping-cart" })
 local InstantTab = Window:Tab({ Title = "Instant Buy", Icon = "zap" })
+local PremiumTab = Window:Tab({ Title = "Premium", Icon = "crown" })
 local PlayerToolsTab = Window:Tab({ Title = "Player Tools", Icon = "users" })
 local OtherHubTab = Window:Tab({ Title = "Other Hub", Icon = "globe" })
 local SettingsTab = Window:Tab({ Title = "Settings", Icon = "settings" })
@@ -129,6 +146,159 @@ local TrollTab = Window:Tab({ Title = "Troll & Fun", Icon = "ghost" })
 local PlayerTab = Window:Tab({ Title = "Utilities", Icon = "user" })
 local UpdateTab = Window:Tab({ Title = "Update Log", Icon = "clipboard-list" })
 local AboutTab = Window:Tab({ Title = "About Us", Icon = "info" })
+
+--------------------------------------------------------------------------------
+-- PREMIUM TAB (PROTECTED BY WHITELIST)
+--------------------------------------------------------------------------------
+if isWhitelisted then
+    local premSec = PremiumTab:Section({ Title = 'Premium Features <font color="#FFD700">[ACTIVE]</font>', Opened = true })
+    premSec:Paragraph({ Title = "Status", Desc = "Welcome " .. LocalPlayer.Name .. "! You are whitelisted." })
+    
+    -- Feature 1: Ultra Auto Buy
+    premSec:Toggle({
+        Title = "Ultra Speed Auto Buy (0.05s)",
+        Value = false,
+        Callback = function(s)
+            ultraAutoBuy = s
+            task.spawn(function()
+                while ultraAutoBuy do
+                    if autoDemogorgan then buyItem("Demogorgan") end
+                    if autoLilDudeReal then buyItem("Lil Dude Real") end
+                    if autoGoldFoldingChair then buyItem("Gold Folding Chair") end
+                    if autoBlackSparklyDumpling then buyItem("Black Sparkly Dumpling") end
+                    task.wait(0.05)
+                end
+            end)
+        end
+    })
+
+    -- Feature 2: Universal Fly Mode (PC & Mobile Compatible)
+    premSec:Toggle({
+        Title = "Universal Fly Mode (PC & Mobile)",
+        Desc = "Fly in the direction you look (Works on Mobile & PC)",
+        Value = false,
+        Callback = function(s)
+            flyEnabled = s
+            local char = LocalPlayer.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChildOfClass("Humanoid") then return end
+            
+            local hrp = char.HumanoidRootPart
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            
+            if flyEnabled then
+                hum.PlatformStand = true
+                
+                local bv = Instance.new("BodyVelocity")
+                bv.Name = "PremiumFlyBV"
+                bv.MaxForce = Vector3.new(1, 1, 1) * 9e9
+                bv.Velocity = Vector3.new(0, 0, 0)
+                bv.Parent = hrp
+
+                local bg = Instance.new("BodyGyro")
+                bg.Name = "PremiumFlyBG"
+                bg.MaxTorque = Vector3.new(1, 1, 1) * 9e9
+                bg.P = 9e4
+                bg.CFrame = hrp.CFrame
+                bg.Parent = hrp
+
+                flyConnection = RunService.RenderStepped:Connect(function()
+                    if not flyEnabled or not hrp or not hrp.Parent then
+                        if flyConnection then flyConnection:Disconnect() end
+                        return
+                    end
+                    
+                    local cam = workspace.CurrentCamera
+                    local moveDir = Vector3.new(0, 0, 0)
+
+                    -- Controlli Tastiera PC
+                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.new(0, 1, 0) end
+
+                    -- Supporto D-Pad / Joystick Mobile
+                    if hum.MoveDirection.Magnitude > 0 and moveDir.Magnitude == 0 then
+                        moveDir = (cam.CFrame.LookVector * -hum.MoveDirection.Z) + (cam.CFrame.RightVector * hum.MoveDirection.X)
+                    end
+
+                    bv.Velocity = moveDir * flySpeed
+                    bg.CFrame = cam.CFrame
+                end)
+            else
+                if flyConnection then flyConnection:Disconnect() end
+                hum.PlatformStand = false
+                if hrp:FindFirstChild("PremiumFlyBV") then hrp.PremiumFlyBV:Destroy() end
+                if hrp:FindFirstChild("PremiumFlyBG") then hrp.PremiumFlyBG:Destroy() end
+            end
+        end
+    })
+
+    -- Feature 3: Safe Platform Teleport
+    premSec:Button({
+        Title = "Teleport to Safe Zone (High Sky)",
+        Desc = "Spawns a safe invisible platform high in the air",
+        Callback = function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local safePos = Vector3.new(0, 1000, 0)
+                
+                if not workspace:FindFirstChild("PremiumSafePlatform") then
+                    local plat = Instance.new("Part")
+                    plat.Name = "PremiumSafePlatform"
+                    plat.Size = Vector3.new(50, 2, 50)
+                    plat.Position = safePos - Vector3.new(0, 3, 0)
+                    plat.Anchored = true
+                    plat.Transparency = 0.5
+                    plat.Material = Enum.Material.Neon
+                    plat.BrickColor = BrickColor.new("Really red")
+                    plat.Parent = workspace
+                end
+                
+                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(safePos)
+            end
+        end
+    })
+
+    -- Feature 4: Infinite Jump
+    premSec:Button({
+        Title = "Infinite Jump",
+        Callback = function()
+            UserInputService.JumpRequest:Connect(function()
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                    LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+                end
+            end)
+        end
+    })
+
+    -- Feature 5: Anti-Reset / Godmode
+    premSec:Button({
+        Title = "God Mode (Anti-Reset)",
+        Desc = "Prevents your character from being killed or reset",
+        Callback = function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            end
+        end
+    })
+
+else
+    local premDeniedSec = PremiumTab:Section({ Title = 'Access Denied <font color="#FF0000">[LOCKED]</font>', Opened = true })
+    premDeniedSec:Paragraph({
+        Title = "You are not whitelisted",
+        Desc = "User: " .. LocalPlayer.Name .. "\n\nJoin our Discord server to request access for Premium features!"
+    })
+    premDeniedSec:Button({
+        Title = "Copy Premium Discord Link",
+        Desc = "Click to copy the Discord link for Premium access",
+        Callback = function()
+            if setclipboard then
+                setclipboard("https://discord.gg/T7CnCSAE7")
+            end
+        end
+    })
+end
 
 --------------------------------------------------------------------------------
 -- AUTO BUY TOGGLES
@@ -512,39 +682,11 @@ end)
 -- UPDATE LOG TAB
 --------------------------------------------------------------------------------
 
-local updateNewSec = UpdateTab:Section({ Title = 'What\'s New in 3.9v OP <font color="#FF0000">[NEW]</font>', Opened = true })
+local updateNewSec = UpdateTab:Section({ Title = 'Current Version <font color="#FF0000">[3.9v OP]</font>', Opened = true })
 updateNewSec:Paragraph({
     Title = "v3.9v OP Release",
-    Desc = "- Added new features\n- Added Discord Server popup dialog\n- Configured buttons: 'Yeah' and 'Fuck off'"
+    Desc = "- Added New Released Items\n- Optimized UI Layout & Performance\n- Improved Mobile Compatibility\n- Fixed Server Teleport Utilities"
 })
-
-local updateOldSec = UpdateTab:Section({ Title = "Previous Updates", Opened = true })
-updateOldSec:Paragraph({ Title = "v3.8 Release", Desc = "- Added Discord Server prompt dialog" })
-updateOldSec:Paragraph({ Title = "v3.7 Release", Desc = "- Added Demogorgan, Lil Dude Real, and Gold Folding Chair" })
-updateOldSec:Paragraph({ Title = "v3.6 Release", Desc = "- Added 'Other Hub' tab with Spawner script" })
-updateOldSec:Paragraph({ Title = "v3.51 Release", Desc = "- Updated interface to English" })
-updateOldSec:Paragraph({ Title = "v3.4 Release", Desc = "- Added JobId Join feature" })
-updateOldSec:Paragraph({ Title = "v3.3 Release", Desc = "- Redesigned all [NEW] tags with red color highlight" })
-updateOldSec:Paragraph({ Title = "v3.2 Release", Desc = "- Added Find Old Server button" })
-updateOldSec:Paragraph({ Title = "v3.1 Release", Desc = "- Added Black Sparkly Dumpling item & Dumpling section" })
-updateOldSec:Paragraph({ Title = "v3.0 Release", Desc = "- Added Hydrant item & Extra Utilities" })
-updateOldSec:Paragraph({ Title = "v2.9 Release", Desc = "- Added Player Tools Tab & Chat Utils" })
-updateOldSec:Paragraph({ Title = "v2.8 Release", Desc = "- Updated Settings Tab controls" })
-updateOldSec:Paragraph({ Title = "v2.7 Release", Desc = "- Added Settings Tab" })
-updateOldSec:Paragraph({ Title = "v2.6 Release", Desc = "- Added Game Stats Tab (FPS, Ping, Session Time)" })
-updateOldSec:Paragraph({ Title = "v2.5 Release", Desc = "- Removed Inventory Utils section" })
-updateOldSec:Paragraph({ Title = "v2.1 Release", Desc = "- Fixed Join Small Server logic to target lowest populated server" })
-updateOldSec:Paragraph({ Title = "v2.0 Release", Desc = "- Added Server Utilities section (Rejoin, Server Hop, Copy JobId)" })
-updateOldSec:Paragraph({ Title = "v1.9 Release", Desc = "- Added Visual Effects section (Night Mode & Max FOV Zoom)" })
-updateOldSec:Paragraph({ Title = "v1.8 Release", Desc = "- Added TROLL & FUN Tab (SpinBot, NoClip, Gravity)" })
-updateOldSec:Paragraph({ Title = "v1.7 Release", Desc = "- Fixed Brain purchase method via BuyItemCash RemoteEvent" })
-updateOldSec:Paragraph({ Title = "v1.6 Release", Desc = "- Added Brain Quest Item and NFT [BEST]" })
-updateOldSec:Paragraph({ Title = "v1.5 Release", Desc = "- Added Rainbow Tralalelo, Udin din din, Garam" })
-updateOldSec:Paragraph({ Title = "v1.4 Release", Desc = "- Added Utilities Tab with Speed & Jump modifiers" })
-updateOldSec:Paragraph({ Title = "v1.3 Release", Desc = "- Added Brainrot Items section and Update Log tab" })
-updateOldSec:Paragraph({ Title = "v1.2 Release", Desc = "- Optimized Auto Buy loop speed" })
-updateOldSec:Paragraph({ Title = "v1.1 Release", Desc = "- Added Quest Items and Not For Sale items" })
-updateOldSec:Paragraph({ Title = "v1.0 Release", Desc = "- Initial Script Launch" })
 
 --------------------------------------------------------------------------------
 -- UTILITIES & ABOUT
