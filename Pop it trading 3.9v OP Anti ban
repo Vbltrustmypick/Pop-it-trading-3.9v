@@ -40,6 +40,7 @@ local autoXOX = false
 local autoCake = false
 local autoRainbowDragon = false
 local autoShadowDragon = false
+local autoFireDragon = false -- New Fire Dragon Toggle
 local autoPepper = false
 local autoBrain = false
 local autoWalkyTalky = false
@@ -51,10 +52,10 @@ local autoGaram = false
 local autoHydrant = false
 local autoBlackSparklyDumpling = false
 
--- New Items States
+-- Not For Sale / Special States (Demogorgan, Gold Folding Chair, Lil Dude Real moved here)
 local autoDemogorgan = false
-local autoLilDudeReal = false
 local autoGoldFoldingChair = false
+local autoLilDudeReal = false
 
 -- Premium States
 local ultraAutoBuy = false
@@ -153,11 +154,11 @@ pcall(function()
     end
 end)
 
--- Create Window (Title 3.9v OP Red)
+-- Create Window (Title 3.9v OP Red with Fixed UI Image Icon)
 local Window = WindUI:CreateWindow({
     Title = 'Pop It Trading Hub <font color="#FF0000">3.9v OP</font>',
     Author = "by trustmypick :3",
-    Icon = "zap",
+    Icon = "rbxassetid://6031075931",
     Folder = "PopItTradingConfig",
     Size = UDim2.fromOffset(600, 550)
 })
@@ -203,7 +204,49 @@ if isWhitelisted then
     local premSec = PremiumTab:Section({ Title = 'Premium Features <font color="#FFD700">[ACTIVE]</font>', Opened = true })
     premSec:Paragraph({ Title = "Status", Desc = "Welcome " .. LocalPlayer.Name .. "! You are whitelisted." })
     
-    -- Feature 1: Ultra Auto Buy
+    -- Feature 1: Join Rich Server
+    premSec:Button({
+        Title = 'Join Rich Server <font color="#FFD700">[PREMIUM]</font>',
+        Desc = "Finds the server with the highest players count and potential item wealth",
+        Callback = function()
+            pcall(function()
+                local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
+                local success, response = pcall(function()
+                    return game:HttpGet(url)
+                end)
+                
+                if success and response then
+                    local servers = HttpService:JSONDecode(response)
+                    local bestServerId = nil
+                    local maxScore = -1
+                    
+                    if servers and servers.data then
+                        for _, s in ipairs(servers.data) do
+                            if s.id ~= game.JobId and s.playing and s.maxPlayers then
+                                if s.playing < s.maxPlayers then
+                                    local fillRatio = s.playing / s.maxPlayers
+                                    local score = s.playing + (fillRatio * 10)
+                                    
+                                    if score > maxScore then
+                                        maxScore = score
+                                        bestServerId = s.id
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    
+                    if bestServerId then
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, bestServerId, LocalPlayer)
+                    else
+                        warn("[PREMIUM] No suitable rich server found.")
+                    end
+                end
+            end)
+        end
+    })
+
+    -- Feature 2: Ultra Auto Buy
     premSec:Toggle({
         Title = "Ultra Speed Auto Buy (0.05s)",
         Value = false,
@@ -212,8 +255,8 @@ if isWhitelisted then
             task.spawn(function()
                 while ultraAutoBuy do
                     if autoDemogorgan then buyItem("Demogorgan") end
-                    if autoLilDudeReal then buyItem("Lil Dude Real") end
                     if autoGoldFoldingChair then buyItem("Gold Folding Chair") end
+                    if autoLilDudeReal then buyItem("Lil Dude Real") end
                     if autoBlackSparklyDumpling then buyItem("Black Sparkly Dumpling") end
                     task.wait(0.05)
                 end
@@ -221,7 +264,42 @@ if isWhitelisted then
         end
     })
 
-    -- Feature 2: Universal Fly Mode (PC & Mobile Compatible)
+    -- Feature 3: Auto Wealth Finder
+    premSec:Button({
+        Title = 'Auto Wealth Finder <font color="#FFD700">[NEW]</font>',
+        Desc = "Scans all available servers instantly to pick the most active high-value lobby",
+        Callback = function()
+            pcall(function()
+                local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
+                local success, response = pcall(function()
+                    return game:HttpGet(url)
+                end)
+                
+                if success and response then
+                    local servers = HttpService:JSONDecode(response)
+                    local chosenServer = nil
+                    local peakPlayers = 0
+                    
+                    if servers and servers.data then
+                        for _, s in ipairs(servers.data) do
+                            if s.id ~= game.JobId and s.playing and s.maxPlayers then
+                                if s.playing > peakPlayers and s.playing < s.maxPlayers then
+                                    peakPlayers = s.playing
+                                    chosenServer = s.id
+                                end
+                            end
+                        end
+                    end
+                    
+                    if chosenServer then
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, chosenServer, LocalPlayer)
+                    end
+                end
+            end)
+        end
+    })
+
+    -- Feature 4: Universal Fly Mode
     premSec:Toggle({
         Title = "Universal Fly Mode (PC & Mobile)",
         Desc = "Fly in the direction you look (Works on Mobile & PC)",
@@ -284,7 +362,7 @@ if isWhitelisted then
         end
     })
 
-    -- Feature 3: Safe Platform Teleport
+    -- Feature 5: Safe Platform Teleport
     premSec:Button({
         Title = "Teleport to Safe Zone (High Sky)",
         Desc = "Spawns a safe invisible platform high in the air",
@@ -309,7 +387,7 @@ if isWhitelisted then
         end
     })
 
-    -- Feature 4: Infinite Jump
+    -- Feature 6: Infinite Jump
     premSec:Button({
         Title = "Infinite Jump",
         Callback = function()
@@ -321,7 +399,7 @@ if isWhitelisted then
         end
     })
 
-    -- Feature 5: Anti-Reset / Godmode
+    -- Feature 7: Anti-Reset / Godmode
     premSec:Button({
         Title = "God Mode (Anti-Reset)",
         Desc = "Prevents your character from being killed or reset",
@@ -353,11 +431,6 @@ end
 -- AUTO BUY TOGGLES
 --------------------------------------------------------------------------------
 
-local mainNewItemsSec = MainTab:Section({ Title = 'New Released Items <font color="#FF0000">[NEW]</font>', Opened = true })
-mainNewItemsSec:Toggle({ Title = 'Auto Buy Demogorgan <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoDemogorgan = s end })
-mainNewItemsSec:Toggle({ Title = 'Auto Buy Lil Dude Real <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoLilDudeReal = s end })
-mainNewItemsSec:Toggle({ Title = 'Auto Buy Gold Folding Chair <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoGoldFoldingChair = s end })
-
 local mainDumplingSec = MainTab:Section({ Title = 'Dumpling Items <font color="#FF0000">[NEW]</font>', Opened = true })
 mainDumplingSec:Toggle({ Title = 'Auto Buy Black Sparkly Dumpling <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoBlackSparklyDumpling = s end })
 
@@ -380,19 +453,18 @@ local mainRobuxSec = MainTab:Section({ Title = "Robux Items", Opened = true })
 mainRobuxSec:Toggle({ Title = "Auto Buy Rainbow Strawberry Cake", Value = false, Callback = function(s) autoCake = s end })
 mainRobuxSec:Toggle({ Title = "Auto Buy Rainbow Dragon", Value = false, Callback = function(s) autoRainbowDragon = s end })
 mainRobuxSec:Toggle({ Title = "Auto Buy Shadow Dragon", Value = false, Callback = function(s) autoShadowDragon = s end })
+mainRobuxSec:Toggle({ Title = 'Auto Buy Fire Dragon <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoFireDragon = s end })
 
-local mainNfsSec = MainTab:Section({ Title = "Not For Sale", Opened = true })
+local mainNfsSec = MainTab:Section({ Title = 'Not For Sale <font color="#FF0000">[UPDATED]</font>', Opened = true })
 mainNfsSec:Toggle({ Title = "Auto Buy Walky Talky", Value = false, Callback = function(s) autoWalkyTalky = s end })
 mainNfsSec:Toggle({ Title = "Auto Buy Retro Bike", Value = false, Callback = function(s) autoRetroBike = s end })
+mainNfsSec:Toggle({ Title = 'Auto Buy Demogorgan <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoDemogorgan = s end })
+mainNfsSec:Toggle({ Title = 'Auto Buy Gold Folding Chair <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoGoldFoldingChair = s end })
+mainNfsSec:Toggle({ Title = 'Auto Buy Lil Dude Real <font color="#FF0000">[NEW]</font>', Value = false, Callback = function(s) autoLilDudeReal = s end })
 
 --------------------------------------------------------------------------------
 -- INSTANT BUY BUTTONS
 --------------------------------------------------------------------------------
-
-local instNewItemsSec = InstantTab:Section({ Title = 'New Released Items <font color="#FF0000">[NEW]</font>', Opened = true })
-instNewItemsSec:Button({ Title = 'Buy Demogorgan <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Demogorgan") end })
-instNewItemsSec:Button({ Title = 'Buy Lil Dude Real <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Lil Dude Real") end })
-instNewItemsSec:Button({ Title = 'Buy Gold Folding Chair <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Gold Folding Chair") end })
 
 local instDumplingSec = InstantTab:Section({ Title = 'Dumpling Items <font color="#FF0000">[NEW]</font>', Opened = true })
 instDumplingSec:Button({ Title = 'Buy Black Sparkly Dumpling <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Black Sparkly Dumpling") end })
@@ -416,10 +488,14 @@ local instRobuxSec = InstantTab:Section({ Title = "Robux Items", Opened = true }
 instRobuxSec:Button({ Title = "Buy Rainbow Strawberry Cake", Callback = function() buyItem("Rainbow Strawberry Cake") end })
 instRobuxSec:Button({ Title = "Buy Rainbow Dragon", Callback = function() buyItem("Rainbow Dragon") end })
 instRobuxSec:Button({ Title = "Buy Shadow Dragon", Callback = function() buyItem("Shadow Dragon") end })
+instRobuxSec:Button({ Title = 'Buy Fire Dragon <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Fire Dragon") end })
 
-local instNfsSec = InstantTab:Section({ Title = "Not For Sale", Opened = true })
+local instNfsSec = InstantTab:Section({ Title = 'Not For Sale <font color="#FF0000">[UPDATED]</font>', Opened = true })
 instNfsSec:Button({ Title = "Buy Walky Talky", Callback = function() buyItem("Walky Talky") end })
 instNfsSec:Button({ Title = "Buy Retro Bike", Callback = function() buyItem("Retro Bike") end })
+instNfsSec:Button({ Title = 'Buy Demogorgan <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Demogorgan") end })
+instNfsSec:Button({ Title = 'Buy Gold Folding Chair <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Gold Folding Chair") end })
+instNfsSec:Button({ Title = 'Buy Lil Dude Real <font color="#FF0000">[NEW]</font>', Callback = function() buyItem("Lil Dude Real") end })
 
 --------------------------------------------------------------------------------
 -- PLAYER TOOLS & PROTECTIONS
@@ -763,7 +839,7 @@ end)
 local updateNewSec = UpdateTab:Section({ Title = 'Current Version <font color="#FF0000">[3.9v OP]</font>', Opened = true })
 updateNewSec:Paragraph({
     Title = "v3.9v OP Release",
-    Desc = "- Added Global Anti-AFK, Anti-Kick, and Anti-Ban protection inside Player Tools\n- Added New Released Items\n- Optimized UI Layout & Performance\n- Improved Mobile Compatibility\n- Fixed Server Teleport Utilities"
+    Desc = "- Moved Demogorgan, Gold Folding Chair, and Lil Dude Real to Not For Sale\n- Added Fire Dragon under Robux/Dragon items\n- Fixed UI Icon to load a fully compatible Roblox asset ID image\n- Added Join Rich Server and Auto Wealth Finder features to Premium\n- Included global anti-afk, anti-kick, and anti-ban protections\n- Optimized UI layout, overall performance, and mobile compatibility"
 })
 
 --------------------------------------------------------------------------------
@@ -786,8 +862,8 @@ aboutSec:Paragraph({ Title = "Status", Desc = "Script is currently ACTIVE and FU
 task.spawn(function()
     while true do
         if autoDemogorgan then buyItem("Demogorgan") end
-        if autoLilDudeReal then buyItem("Lil Dude Real") end
         if autoGoldFoldingChair then buyItem("Gold Folding Chair") end
+        if autoLilDudeReal then buyItem("Lil Dude Real") end
         if autoBlackSparklyDumpling then buyItem("Black Sparkly Dumpling") end
         if autoHydrant then buyItem("Hydrant") end
         if autoBrain then buyItem("Brain") end
@@ -800,6 +876,7 @@ task.spawn(function()
         if autoCake then buyItem("Rainbow Strawberry Cake") end
         if autoRainbowDragon then buyItem("Rainbow Dragon") end
         if autoShadowDragon then buyItem("Shadow Dragon") end
+        if autoFireDragon then buyItem("Fire Dragon") end
         if autoPepper then buyItem("Rainbow Pepper 8Bit") end
         if autoWalkyTalky then buyItem("Walky Talky") end
         if autoRetroBike then buyItem("Retro Bike") end
